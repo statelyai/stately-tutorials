@@ -6,7 +6,7 @@ Run `yarn dev` to start the project
 
 ## `pages/lessons/[lessonId.tsx]`
 
-Where the lessons get implemented. Very messy. Visit `/pages/lessons/assign` in localhost:3000 to try it
+Where the lessons get implemented. Very messy. Visit `/lessons/assign` in localhost:3000 to try it
 
 ## `lessonRunner.machine.ts`
 
