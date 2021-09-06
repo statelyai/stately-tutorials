@@ -1,34 +1,26 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Getting started
 
-## Getting Started
+Run `yarn dev` to start the project
 
-First, run the development server:
+# Important Files
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+## `pages/lessons/[lessonId.tsx]`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Where the lessons get implemented. Very messy. Visit `/pages/lessons/assign` in localhost:3000 to try it
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## `lessonRunner.machine.ts`
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Where all the logic for the lesson runner lives
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## `lessons/lessons/courses`
 
-## Learn More
+Where all of the course information lives. Add courses to this folder.
 
-To learn more about Next.js, take a look at the following resources:
+# TODO
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Strip out tailwind and replace with Chakra UI
+- Make the lesson runner look pretty
+- Strip out the esbuild-on-API setup and use Monaco editor to compile
+- Set up Monaco editor to use imports, in the same way as we have it in Stately viz
+- Build a page to display all the courses
+- Go on to the next course when you're done with the first one.
