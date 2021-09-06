@@ -4,7 +4,7 @@ Run `yarn dev` to start the project
 
 # Important Files
 
-## `pages/lessons/[lessonId.tsx]`
+## `pages/lessons/[lessonId].tsx`
 
 Where the lessons get implemented. Very messy. Visit `/lessons/assign` in localhost:3000 to try it
 
