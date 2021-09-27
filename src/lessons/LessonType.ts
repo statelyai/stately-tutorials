@@ -27,7 +27,8 @@ export type AcceptanceCriteriaStep<TContext, TEvent extends EventObject> =
   | {
       type: "ASSERTION";
       description: string;
-      assertion: (state: State<TContext, TEvent>) => boolean;
+      check: (state: State<TContext, TEvent>) => string | number | boolean;
+      expectedValue: string | number | boolean;
     }
   | {
       type: "OPTIONS_ASSERTION";

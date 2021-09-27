@@ -1,7 +1,7 @@
-import { CourseType } from '../../../LessonType';
+import { CourseType } from "../../../LessonType";
 
 const assignCourse: CourseType = {
-  title: 'Assign',
+  title: "Assign",
   initialMachineText: `createMachine({
   context: {
     count: 0,
@@ -21,20 +21,22 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'INCREMENT',
+                  type: "INCREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 1,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 1`,
+                expectedValue: 1,
               },
             ],
           },
@@ -48,20 +50,22 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'DECREMENT',
+                  type: "DECREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === -1,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal -1`,
+                expectedValue: -1,
               },
             ],
           },
@@ -74,46 +78,52 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'DECREMENT',
+                  type: "DECREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === -1,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal -1`,
+                expectedValue: -1,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 1,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 1`,
+                expectedValue: 1,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'INCREMENT',
+                  type: "INCREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 2,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 2`,
+                expectedValue: 2,
               },
             ],
           },
@@ -126,46 +136,52 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'DECREMENT',
+                  type: "DECREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === -1,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal -1`,
+                expectedValue: -1,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'INCREMENT',
+                  type: "INCREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 0`,
+                expectedValue: 0,
               },
             ],
           },
@@ -178,7 +194,7 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'OPTIONS_ASSERTION',
+                type: "OPTIONS_ASSERTION",
                 assertion: (options) =>
                   Boolean(options.actions.incrementPressCount),
                 description: `Must have an action called 'incrementPressCount' defined`,
@@ -188,46 +204,52 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'DECREMENT',
+                  type: "DECREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === -1,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal -1`,
+                expectedValue: -1,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 1,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 1`,
+                expectedValue: 1,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'INCREMENT',
+                  type: "INCREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 2,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 2`,
+                expectedValue: 2,
               },
             ],
           },
@@ -240,7 +262,7 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'OPTIONS_ASSERTION',
+                type: "OPTIONS_ASSERTION",
                 assertion: (options) =>
                   Boolean(options.actions.incrementPressCount),
                 description: `Must have an action called 'incrementPressCount' defined`,
@@ -250,46 +272,52 @@ const assignCourse: CourseType = {
           {
             steps: [
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'DECREMENT',
+                  type: "DECREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === -1,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal -1`,
+                expectedValue: -1,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 1,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 1`,
+                expectedValue: 1,
               },
               {
-                type: 'SEND_EVENT',
+                type: "SEND_EVENT",
                 event: {
-                  type: 'INCREMENT',
+                  type: "INCREMENT",
                 },
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.count === 0,
+                type: "ASSERTION",
+                check: (state) => state.context.count,
                 description: `The 'count' in context should equal 0`,
+                expectedValue: 0,
               },
               {
-                type: 'ASSERTION',
-                assertion: (state) => state.context.pressCount === 3,
+                type: "ASSERTION",
+                check: (state) => state.context.pressCount,
                 description: `The 'pressCount' in context should equal 3`,
+                expectedValue: 3,
               },
             ],
           },

@@ -10,6 +10,7 @@ import {
 } from "../../lessons/lessonRunner.machine";
 import * as courses from "../../lessons/lessons";
 import { CourseType } from "../../lessons/LessonType";
+
 import ReactMarkdown from "react-markdown";
 
 const Editor = dynamic(import("@monaco-editor/react"), { ssr: false });
@@ -26,8 +27,6 @@ export const getStaticPaths: GetStaticPaths = async (context) => {
   );
 
   const dirs = fs.readdirSync(lessonFolderPath);
-
-  console.log(dirs);
 
   return {
     paths: dirs.map((dir) => {
@@ -97,12 +96,12 @@ const LessonInner = (props: {
   const cases = getCurrentLessonCases(state.context);
 
   return (
-    <div className="flex items-stretch w-full h-full">
+    <div className="flex items-stretch w-full h-full min-h-screen">
       <div className="flex-shrink-0 p-6 overflow-y-auto border-r w-80">
         <ReactMarkdown
           components={{
             h1: (props) => (
-              <h1 {...props} className="text-2xl font-bold mb-6"></h1>
+              <h1 {...props} className="mb-6 text-2xl font-bold"></h1>
             ),
             p: (props) => <p {...props} className="mb-4"></p>,
           }}
@@ -116,7 +115,7 @@ const LessonInner = (props: {
           </button>
         )}
       </div>
-      <div className="flex-1">
+      <div className="flex flex-col flex-1">
         <Editor
           height="400px"
           language="typescript"
@@ -150,92 +149,41 @@ const LessonInner = (props: {
           }}
           value={state.context.fileText}
         />
-        <iframe data-xstate height="400px" width="100%" />
+        <div className="flex-1 w-full p-4 px-6 bg-black">
+          {state.context.terminalLines.map((line, index) => {
+            return (
+              <p
+                className={classNames(
+                  line.color === "red" && "text-red-400",
+                  line.color === "green" && "text-green-400",
+                  line.color === "white" && "text-white",
+                  line.color === "gray" && "text-gray-300",
+                  line.color === "blue" && "text-blue-400",
+                  "font-mono text-sm",
+                  line.bold && "font-bold",
+                  "leading-loose",
+                )}
+                key={index}
+              >
+                {line.icon === "check" && (
+                  <span className="mr-2 text-xl">✔️</span>
+                )}
+                {line.icon === "arrow-right" && (
+                  <span className="mr-2 text-xl">➡</span>
+                )}
+                {line.icon === "clock" && (
+                  <span className="mr-2 text-xl">⏱️</span>
+                )}
+                {line.icon === "cross" && (
+                  <span className="mr-2 text-xl">✖️</span>
+                )}
+                {`${line.text}`}
+              </p>
+            );
+          })}
+        </div>
       </div>
-      <div className="flex-shrink-0 p-6 space-y-10 border-l">
-        {cases.map((acceptanceCase, caseIndex) => {
-          return (
-            <div className="max-w-md space-y-4" key={caseIndex}>
-              <h1 className="text-xl font-bold tracking-tight text-gray-800">
-                Case #{caseIndex + 1}
-              </h1>
-              {acceptanceCase.steps.map((step, stepIndex) => {
-                const stepTotal = Number(`${caseIndex}.${stepIndex}`);
-                const cursorTotal = Number(
-                  `${state.context.stepCursor?.case || 0}.${
-                    state.context.stepCursor?.step || 0
-                  }`,
-                );
-                let status: "notComplete" | "errored" | "complete" =
-                  "notComplete";
-                if (
-                  state.context.lastErroredStep?.step === stepIndex &&
-                  state.context.lastErroredStep?.case === caseIndex
-                ) {
-                  status = "errored";
-                } else if (
-                  state.hasTag("testsPassed") ||
-                  stepTotal < cursorTotal
-                ) {
-                  status = "complete";
-                }
-                return (
-                  <div
-                    className={classNames("font-medium border", {
-                      "border-gray-200 text-gray-700 bg-white":
-                        status === "notComplete",
-                      "border-green-200 text-green-700 bg-green-100":
-                        status === "complete",
-                      "border-red-200 text-red-700 bg-red-100":
-                        status === "errored",
-                    })}
-                    key={stepIndex}
-                  >
-                    <div>
-                      <div className="flex items-center p-2 px-3 space-x-3">
-                        {/* {status === "errored" ? (
-                          <CloseOutlined />
-                        ) : status === "complete" ? (
-                          <CheckOutlined />
-                        ) : (
-                          <div style={{ width: 24 }} />
-                        )} */}
-                        {(step.type === "ASSERTION" ||
-                          step.type === "OPTIONS_ASSERTION") && (
-                          <div>
-                            <p className="mb-1">{step.description}</p>
-                            <p className="font-mono text-xs opacity-60">
-                              {step.assertion.toString().slice(47, -5)}
-                            </p>
-                          </div>
-                        )}
-                        {step.type === "SEND_EVENT" && (
-                          <div>
-                            <p className="mb-1">
-                              Send a {step.event.type} event
-                            </p>
-                            <p className="font-mono text-xs opacity-60">
-                              {JSON.stringify(step.event, null, 1)}
-                            </p>
-                          </div>
-                        )}
-                        {step.type === "WAIT" && (
-                          <div>
-                            <p>Wait for {step.durationInMs}ms</p>
-                            {/* <p className="font-mono text-xs opacity-60">
-                              {JSON.stringify(step.event, null, 1)}
-                            </p> */}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
+
       {/* {erroredStep && (
         <div className="p-6 bg-red-100">
           {erroredStep.type === 'ASSERTION' && (
@@ -246,3 +194,84 @@ const LessonInner = (props: {
     </div>
   );
 };
+
+// const yeah = (
+//   <>
+//     {cases.map((acceptanceCase, caseIndex) => {
+//       return (
+//         <div className="max-w-md space-y-4" key={caseIndex}>
+//           <h1 className="text-xl font-bold tracking-tight text-gray-800">
+//             Case #{caseIndex + 1}
+//           </h1>
+//           {acceptanceCase.steps.map((step, stepIndex) => {
+//             const stepTotal = Number(`${caseIndex}.${stepIndex}`);
+//             const cursorTotal = Number(
+//               `${state.context.stepCursor?.case || 0}.${
+//                 state.context.stepCursor?.step || 0
+//               }`,
+//             );
+//             let status: "notComplete" | "errored" | "complete" = "notComplete";
+//             if (
+//               state.context.lastErroredStep?.step === stepIndex &&
+//               state.context.lastErroredStep?.case === caseIndex
+//             ) {
+//               status = "errored";
+//             } else if (state.hasTag("testsPassed") || stepTotal < cursorTotal) {
+//               status = "complete";
+//             }
+//             return (
+//               <div
+//                 className={classNames("font-medium border", {
+//                   "border-gray-200 text-gray-700 bg-white":
+//                     status === "notComplete",
+//                   "border-green-200 text-green-700 bg-green-100":
+//                     status === "complete",
+//                   "border-red-200 text-red-700 bg-red-100":
+//                     status === "errored",
+//                 })}
+//                 key={stepIndex}
+//               >
+//                 <div>
+//                   <div className="flex items-center p-2 px-3 space-x-3">
+//                     {/* {status === "errored" ? (
+//                 <CloseOutlined />
+//               ) : status === "complete" ? (
+//                 <CheckOutlined />
+//               ) : (
+//                 <div style={{ width: 24 }} />
+//               )} */}
+//                     {(step.type === "ASSERTION" ||
+//                       step.type === "OPTIONS_ASSERTION") && (
+//                       <div>
+//                         <p className="mb-1">{step.description}</p>
+//                         <p className="font-mono text-xs opacity-60">
+//                           {step.assertion.toString().slice(47, -5)}
+//                         </p>
+//                       </div>
+//                     )}
+//                     {step.type === "SEND_EVENT" && (
+//                       <div>
+//                         <p className="mb-1">Send a {step.event.type} event</p>
+//                         <p className="font-mono text-xs opacity-60">
+//                           {JSON.stringify(step.event, null, 1)}
+//                         </p>
+//                       </div>
+//                     )}
+//                     {step.type === "WAIT" && (
+//                       <div>
+//                         <p>Wait for {step.durationInMs}ms</p>
+//                         {/* <p className="font-mono text-xs opacity-60">
+//                     {JSON.stringify(step.event, null, 1)}
+//                   </p> */}
+//                       </div>
+//                     )}
+//                   </div>
+//                 </div>
+//               </div>
+//             );
+//           })}
+//         </div>
+//       );
+//     })}
+//   </>
+// );

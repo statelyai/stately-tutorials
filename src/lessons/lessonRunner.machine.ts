@@ -1,4 +1,3 @@
-import { inspect } from "@xstate/inspect";
 import {
   assign,
   createMachine,
@@ -32,6 +31,14 @@ interface Context {
         step: number;
       }
     | undefined;
+  terminalLines: TerminalLine[];
+}
+
+interface TerminalLine {
+  color: "red" | "white" | "blue" | "green" | "gray";
+  icon?: "check" | "cross" | "arrow-right" | "clock";
+  text: string;
+  bold?: boolean;
 }
 
 type Event =
@@ -41,6 +48,9 @@ type Event =
     }
   | {
       type: "GO_TO_NEXT_LESSON";
+    }
+  | {
+      type: "CLEAR_TERMINAL";
     };
 
 const checkingIfMachineIsValid: StateNodeConfig<Context, any, Event> = {
@@ -61,8 +71,6 @@ const checkingIfMachineIsValid: StateNodeConfig<Context, any, Event> = {
 
       // Tests the machine to see if it fails compilation
       interpret(machine).start().stop();
-
-      inspect();
 
       await new Promise((res) => waitFor(600, res as any));
 
@@ -97,8 +105,12 @@ export const lessonMachine = createMachine<Context, Event>(
         step: 0,
       },
       lastErroredStep: undefined,
+      terminalLines: [],
     },
     on: {
+      CLEAR_TERMINAL: {
+        actions: "clearTerminalLines",
+      },
       TEXT_EDITED: {
         target: ".throttling",
         actions: assign((context, event) => {
@@ -132,11 +144,13 @@ export const lessonMachine = createMachine<Context, Event>(
         },
       },
       throttling: {
+        entry: ["clearTerminalLines"],
         after: {
-          700: "checkingIfMachineIsValid",
+          400: "checkingIfMachineIsValid",
         },
       },
       movingToNextLesson: {
+        entry: ["clearTerminalLines"],
         id: "movingToNextLesson",
         always: {
           actions: [
@@ -158,23 +172,25 @@ export const lessonMachine = createMachine<Context, Event>(
       },
       checkingIfMachineIsValid,
       runningTests: {
-        entry: ["resetLessonCursor", "startService"],
+        entry: ["resetLessonCursor", "startService", "logTestStartToTerminal"],
         initial: "runningStep",
         onDone: {
           target: "idle.machineValid.testsPassed",
         },
         states: {
           runningStep: {
+            entry: ["reportStepStartedInTerminal"],
             on: {
               STEP_DONE: {
                 target: "checkingIfThereIsAnIncompleteStep",
+                actions: ["reportStepSucceededInTerminal"],
               },
             },
             invoke: {
               src: "runTestStep",
               onError: {
                 target: "#idle.machineValid.testsNotPassed",
-                actions: ["markStepAsErrored"],
+                actions: ["reportStepFailedInTerminal", "markStepAsErrored"],
               },
             },
           },
@@ -187,11 +203,19 @@ export const lessonMachine = createMachine<Context, Event>(
               },
               {
                 cond: "isThereAnIncompleteStep",
-                actions: ["restartService", "incrementToNextStep"],
+                actions: [
+                  "reportCaseSucceededInTerminal",
+                  "restartService",
+                  "incrementToNextStep",
+                ],
                 target: "runningStep",
               },
               {
                 target: "complete",
+                actions: [
+                  "reportCaseSucceededInTerminal",
+                  "reportAllTestsPassedInTerminal",
+                ],
               },
             ],
           },
@@ -228,6 +252,151 @@ export const lessonMachine = createMachine<Context, Event>(
       },
     },
     actions: {
+      clearTerminalLines: assign((context) => {
+        return {
+          terminalLines: [],
+        };
+      }),
+      reportAllTestsPassedInTerminal: assign((context) => {
+        const successMessage = "All tests passed!";
+        return {
+          terminalLines: [
+            ...context.terminalLines,
+            {
+              color: "green",
+              text: new Array(successMessage.length + 2).fill("-").join(""),
+            },
+            {
+              color: "green",
+              text: successMessage,
+              bold: true,
+              icon: "check",
+            },
+            {
+              color: "green",
+              text: new Array(successMessage.length + 2).fill("-").join(""),
+            },
+          ],
+        };
+      }),
+      logTestStartToTerminal: assign((context) => {
+        return {
+          terminalLines: [
+            ...context.terminalLines,
+            {
+              color: "blue",
+              bold: true,
+              text: `Starting new test`,
+            },
+          ],
+        };
+      }),
+      reportCaseSucceededInTerminal: assign((context) => {
+        return {
+          terminalLines: [
+            ...context.terminalLines,
+            {
+              text: `Test #${context.stepCursor.case + 1} passed`,
+              color: "white",
+              bold: true,
+              icon: "check",
+            },
+          ],
+        };
+      }),
+      reportStepSucceededInTerminal: assign((context) => {
+        const currentStep = getCurrentLessonStep(context);
+
+        let text: TerminalLine[] = [];
+
+        if (currentStep.type === "ASSERTION") {
+          text = [
+            {
+              text: `Expected ${currentStep.check
+                .toString()
+                .slice(43, -13)} to equal ${
+                currentStep.expectedValue
+              } and received ${currentStep.check(context.service!.state)}`,
+              color: "gray",
+              icon: "check",
+            },
+          ];
+        }
+
+        if (!text) return {};
+
+        return {
+          terminalLines: [...context.terminalLines, ...text],
+        };
+      }),
+      reportStepFailedInTerminal: assign((context) => {
+        const currentStep = getCurrentLessonStep(context);
+
+        let text: TerminalLine[] = [];
+
+        if (currentStep.type === "ASSERTION") {
+          const errorText = `Expected ${currentStep.check
+            .toString()
+            .slice(43, -13)} to equal ${
+            currentStep.expectedValue
+          }, instead received ${currentStep.check(context.service!.state)}`;
+          text = [
+            {
+              color: "red",
+              text: new Array(errorText.length + 2).fill("-").join(""),
+            },
+            {
+              color: "red",
+              bold: true,
+              text: `Test #${context.stepCursor.case + 1} failed`,
+            },
+            {
+              text: errorText,
+              color: "red",
+              icon: "cross",
+            },
+            {
+              color: "red",
+              text: new Array(errorText.length + 2).fill("-").join(""),
+            },
+          ];
+        }
+
+        if (!text) return {};
+
+        return {
+          terminalLines: [...context.terminalLines, ...text],
+        };
+      }),
+      reportStepStartedInTerminal: assign((context) => {
+        const currentStep = getCurrentLessonStep(context);
+
+        let text: TerminalLine[] = [];
+
+        if (currentStep.type === "WAIT") {
+          text = [
+            {
+              text: `Waiting for ${currentStep.durationInMs}ms...`,
+              icon: "clock",
+              color: "white",
+            },
+          ];
+        } else if (currentStep.type === "SEND_EVENT") {
+          text = [
+            {
+              text: `Sending an event of type ${currentStep.event.type} to the machine...`,
+              color: "white",
+              icon: "arrow-right",
+            },
+          ];
+        }
+
+        if (!text) return {};
+
+        return {
+          terminalLines: [...context.terminalLines, ...text],
+        };
+      }),
       startService: (context) => {
         if (
           context.service &&
@@ -321,9 +490,9 @@ const runTestStep = <TContext, TEvent extends EventObject>(
   switch (step.type) {
     case "ASSERTION":
       {
-        const succeeded = step.assertion(state);
+        const value = step.check(state);
 
-        if (!succeeded) {
+        if (value !== step.expectedValue) {
           throw new Error("Assertion failed");
         }
         callback();
@@ -400,4 +569,13 @@ export const getCurrentLessonCases = (
   }
 
   return cases;
+};
+
+export const getCurrentLessonStep = (
+  context: Context,
+): AcceptanceCriteriaStep<any, any> => {
+  const cases = getCurrentLessonCases(context);
+  const currentStep =
+    cases[context.stepCursor.case].steps[context.stepCursor.step];
+  return currentStep;
 };

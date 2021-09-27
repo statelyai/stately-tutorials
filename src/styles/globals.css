@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body,
+div#__next {
+  min-height: 100vh;
+}
