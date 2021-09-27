@@ -1,6 +1,5 @@
-import type { GetStaticProps, InferGetStaticPropsType, NextPage } from "next";
-import { courseMeta } from "../lessons/lessons/courses/meta";
 import Link from "next/link";
+import { courseMeta } from "../lessons/lessons/courses/meta";
 
 const Home = () => {
   return (

@@ -2,10 +2,12 @@ import { useMachine } from "@xstate/react";
 import classNames from "classnames";
 import type * as monaco from "monaco-editor";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
+import { useRouter } from "next/dist/client/router";
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { lessonMachine } from "../../lessons/lessonRunner.machine";
+import { courseMeta } from "../../lessons/lessons/courses/meta";
 import { CourseType } from "../../lessons/LessonType";
 
 const Editor = dynamic(import("@monaco-editor/react"), { ssr: false });
@@ -60,20 +62,8 @@ export const getStaticProps: GetStaticProps = async (context) => {
   };
 };
 
-const useAsyncLoadCourse = (id: string) => {
-  const [course, setCourse] = useState<CourseType>();
-
-  useEffect(() => {
-    import(`../../lessons/lessons/courses/${id}/root`).then((res) => {
-      setCourse(res.default);
-    });
-  }, [id]);
-
-  return course;
-};
-
 const LessonDemo = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const course = useAsyncLoadCourse(props.id);
+  const course = courseMeta.find((course) => course.id === props.id)?.course;
 
   if (!course) return null;
 
@@ -87,6 +77,7 @@ const LessonInner = (props: {
   markdownFiles: string[];
 }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const router = useRouter();
 
   const [state, send] = useMachine(lessonMachine, {
     context: {
@@ -96,6 +87,9 @@ const LessonInner = (props: {
     actions: {
       autoFormatEditor: () => {
         editorRef.current?.getAction("editor.action.formatDocument").run();
+      },
+      goToIndexPage: () => {
+        router.push("/");
       },
     },
   });

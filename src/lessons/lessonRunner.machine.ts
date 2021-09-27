@@ -157,9 +157,15 @@ export const lessonMachine = createMachine<Context, Event>(
               testsPassed: {
                 tags: "testsPassed",
                 on: {
-                  GO_TO_NEXT_LESSON: {
-                    target: "#movingToNextLesson",
-                  },
+                  GO_TO_NEXT_LESSON: [
+                    {
+                      cond: "thereIsANextLesson",
+                      target: "#movingToNextLesson",
+                    },
+                    {
+                      actions: "goToIndexPage",
+                    },
+                  ],
                 },
               },
             },
@@ -338,6 +344,9 @@ export const lessonMachine = createMachine<Context, Event>(
         const cases = getCurrentLessonCases(context);
         const nextStep = getNextSteps(cases, context.stepCursor);
         return Boolean(nextStep);
+      },
+      thereIsANextLesson: (context) => {
+        return Boolean(context.course.lessons[context.lessonIndex + 1]);
       },
     },
     actions: {
