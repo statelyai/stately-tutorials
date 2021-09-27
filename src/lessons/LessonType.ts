@@ -1,7 +1,6 @@
 import { EventObject, MachineOptions, State } from "xstate";
 
 export interface CourseType {
-  title: string;
   initialMachineText: string;
   lessons: LessonType[];
 }

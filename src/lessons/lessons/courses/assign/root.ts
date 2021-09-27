@@ -1,7 +1,6 @@
 import { CourseType } from "../../../LessonType";
 
 const assignCourse: CourseType = {
-  title: "Assign",
   initialMachineText: `createMachine({
   context: {
     count: 0,

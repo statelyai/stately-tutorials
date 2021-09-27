@@ -1,7 +1,6 @@
 import { CourseType } from "../../../LessonType";
 
 const optionsCourse: CourseType = {
-  title: "Options",
   initialMachineText: `createMachine({
   entry: ['sayHello'],
 }, {
