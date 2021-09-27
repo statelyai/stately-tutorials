@@ -323,6 +323,14 @@ export const lessonMachine = createMachine<Context, Event>(
               icon: "check",
             },
           ];
+        } else if (currentStep.type === "OPTIONS_ASSERTION") {
+          text = [
+            {
+              text: `Expected: ${currentStep.description}`,
+              color: "gray",
+              icon: "check",
+            },
+          ];
         }
 
         if (!text) return {};
@@ -342,6 +350,28 @@ export const lessonMachine = createMachine<Context, Event>(
             .slice(43, -13)} to equal ${
             currentStep.expectedValue
           }, instead received ${currentStep.check(context.service!.state)}`;
+          text = [
+            {
+              color: "red",
+              text: new Array(errorText.length + 2).fill("-").join(""),
+            },
+            {
+              color: "red",
+              bold: true,
+              text: `Test #${context.stepCursor.case + 1} failed`,
+            },
+            {
+              text: errorText,
+              color: "red",
+              icon: "cross",
+            },
+            {
+              color: "red",
+              text: new Array(errorText.length + 2).fill("-").join(""),
+            },
+          ];
+        } else if (currentStep.type === "OPTIONS_ASSERTION") {
+          const errorText = `Check failed: ${currentStep.description}`;
           text = [
             {
               color: "red",
