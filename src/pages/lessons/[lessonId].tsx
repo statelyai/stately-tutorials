@@ -15,8 +15,6 @@ import ReactMarkdown from "react-markdown";
 
 const Editor = dynamic(import("@monaco-editor/react"), { ssr: false });
 
-export const someValue = "yes";
-
 export const getStaticPaths: GetStaticPaths = async (context) => {
   const fs = await import("fs");
   const path = await import("path");
@@ -93,11 +91,9 @@ const LessonInner = (props: {
     },
   });
 
-  const cases = getCurrentLessonCases(state.context);
-
   return (
     <div className="flex items-stretch w-full h-full min-h-screen">
-      <div className="flex-shrink-0 p-6 overflow-y-auto border-r w-80">
+      <div className="flex-shrink-0 p-6 overflow-y-auto border-r w-96">
         <ReactMarkdown
           components={{
             h1: (props) => (
@@ -106,14 +102,6 @@ const LessonInner = (props: {
             p: (props) => <p {...props} className="mb-4"></p>,
           }}
         >{`${props.markdownFiles[state.context.lessonIndex]}`}</ReactMarkdown>
-        {state.hasTag("testsPassed") && (
-          <button
-            onClick={() => send("GO_TO_NEXT_LESSON")}
-            className="px-4 py-2 font-semibold text-green-800 bg-green-100 rounded"
-          >
-            Next Lesson
-          </button>
-        )}
       </div>
       <div className="flex flex-col flex-1">
         <Editor
@@ -181,97 +169,24 @@ const LessonInner = (props: {
               </p>
             );
           })}
-        </div>
-      </div>
-
-      {/* {erroredStep && (
-        <div className="p-6 bg-red-100">
-          {erroredStep.type === 'ASSERTION' && (
-            <p>Error: {erroredStep.description}</p>
+          {state.hasTag("testsPassed") && (
+            <button
+              onClick={() => send("GO_TO_NEXT_LESSON")}
+              className="px-4 py-2 mt-3 font-mono text-sm font-semibold text-black uppercase bg-green-400"
+            >
+              Next Lesson
+            </button>
+          )}
+          {state.hasTag("testsNotPassed") && (
+            <button
+              // onClick={() => send("GO_TO_NEXT_LESSON")}
+              className="px-4 py-2 mt-3 font-mono text-sm font-semibold text-black uppercase bg-red-400"
+            >
+              Show Me The Answer
+            </button>
           )}
         </div>
-      )} */}
+      </div>
     </div>
   );
 };
-
-// const yeah = (
-//   <>
-//     {cases.map((acceptanceCase, caseIndex) => {
-//       return (
-//         <div className="max-w-md space-y-4" key={caseIndex}>
-//           <h1 className="text-xl font-bold tracking-tight text-gray-800">
-//             Case #{caseIndex + 1}
-//           </h1>
-//           {acceptanceCase.steps.map((step, stepIndex) => {
-//             const stepTotal = Number(`${caseIndex}.${stepIndex}`);
-//             const cursorTotal = Number(
-//               `${state.context.stepCursor?.case || 0}.${
-//                 state.context.stepCursor?.step || 0
-//               }`,
-//             );
-//             let status: "notComplete" | "errored" | "complete" = "notComplete";
-//             if (
-//               state.context.lastErroredStep?.step === stepIndex &&
-//               state.context.lastErroredStep?.case === caseIndex
-//             ) {
-//               status = "errored";
-//             } else if (state.hasTag("testsPassed") || stepTotal < cursorTotal) {
-//               status = "complete";
-//             }
-//             return (
-//               <div
-//                 className={classNames("font-medium border", {
-//                   "border-gray-200 text-gray-700 bg-white":
-//                     status === "notComplete",
-//                   "border-green-200 text-green-700 bg-green-100":
-//                     status === "complete",
-//                   "border-red-200 text-red-700 bg-red-100":
-//                     status === "errored",
-//                 })}
-//                 key={stepIndex}
-//               >
-//                 <div>
-//                   <div className="flex items-center p-2 px-3 space-x-3">
-//                     {/* {status === "errored" ? (
-//                 <CloseOutlined />
-//               ) : status === "complete" ? (
-//                 <CheckOutlined />
-//               ) : (
-//                 <div style={{ width: 24 }} />
-//               )} */}
-//                     {(step.type === "ASSERTION" ||
-//                       step.type === "OPTIONS_ASSERTION") && (
-//                       <div>
-//                         <p className="mb-1">{step.description}</p>
-//                         <p className="font-mono text-xs opacity-60">
-//                           {step.assertion.toString().slice(47, -5)}
-//                         </p>
-//                       </div>
-//                     )}
-//                     {step.type === "SEND_EVENT" && (
-//                       <div>
-//                         <p className="mb-1">Send a {step.event.type} event</p>
-//                         <p className="font-mono text-xs opacity-60">
-//                           {JSON.stringify(step.event, null, 1)}
-//                         </p>
-//                       </div>
-//                     )}
-//                     {step.type === "WAIT" && (
-//                       <div>
-//                         <p>Wait for {step.durationInMs}ms</p>
-//                         {/* <p className="font-mono text-xs opacity-60">
-//                     {JSON.stringify(step.event, null, 1)}
-//                   </p> */}
-//                       </div>
-//                     )}
-//                   </div>
-//                 </div>
-//               </div>
-//             );
-//           })}
-//         </div>
-//       );
-//     })}
-//   </>
-// );

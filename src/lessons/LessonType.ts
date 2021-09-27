@@ -26,7 +26,6 @@ export interface AcceptanceCriteriaCase<
 export type AcceptanceCriteriaStep<TContext, TEvent extends EventObject> =
   | {
       type: "ASSERTION";
-      description: string;
       check: (state: State<TContext, TEvent>) => string | number | boolean;
       expectedValue: string | number | boolean;
     }

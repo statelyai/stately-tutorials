@@ -129,7 +129,9 @@ export const lessonMachine = createMachine<Context, Event>(
           machineValid: {
             initial: "testsNotPassed",
             states: {
-              testsNotPassed: {},
+              testsNotPassed: {
+                tags: "testsNotPassed",
+              },
               testsPassed: {
                 tags: "testsPassed",
                 on: {
