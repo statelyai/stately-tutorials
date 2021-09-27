@@ -18,6 +18,10 @@ const optionsCourse: CourseType = {
                 assertion: (options) => Boolean(options.actions.sayHello),
                 description: `sayHello should be defined in options.actions`,
               },
+              {
+                type: "CONSOLE_ASSERTION",
+                expectedText: "Hello",
+              },
             ],
           },
         ],

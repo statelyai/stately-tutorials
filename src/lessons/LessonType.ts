@@ -41,4 +41,8 @@ export type AcceptanceCriteriaStep<TContext, TEvent extends EventObject> =
   | {
       type: "WAIT";
       durationInMs: number;
+    }
+  | {
+      type: "CONSOLE_ASSERTION";
+      expectedText: string;
     };

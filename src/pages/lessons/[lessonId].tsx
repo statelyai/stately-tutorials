@@ -147,6 +147,7 @@ const LessonInner = (props: {
                   line.color === "white" && "text-white",
                   line.color === "gray" && "text-gray-300",
                   line.color === "blue" && "text-blue-400",
+                  line.color === "yellow" && "text-yellow-200",
                   "font-mono text-sm",
                   line.bold && "font-bold",
                   "leading-loose",

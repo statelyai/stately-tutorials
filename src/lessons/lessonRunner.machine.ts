@@ -35,10 +35,11 @@ interface Context {
 }
 
 interface TerminalLine {
-  color: "red" | "white" | "blue" | "green" | "gray";
+  color: "red" | "white" | "blue" | "green" | "gray" | "yellow";
   icon?: "check" | "cross" | "arrow-right" | "clock";
   text: string;
   bold?: boolean;
+  fromUser?: boolean;
 }
 
 type Event =
@@ -51,6 +52,11 @@ type Event =
     }
   | {
       type: "CLEAR_TERMINAL";
+    }
+  | {
+      type: "LOG_TO_CONSOLE";
+      args: any[];
+      consoleType: "log" | "warn" | "error";
     };
 
 const checkingIfMachineIsValid: StateNodeConfig<Context, any, Event> = {
@@ -88,7 +94,23 @@ const checkingIfMachineIsValid: StateNodeConfig<Context, any, Event> = {
     },
     onError: {
       target: "idle.machineCouldNotCompile",
-      actions: [console.log],
+      actions: [
+        console.log,
+        assign({
+          terminalLines: (context, event) => [
+            ...context.terminalLines,
+            {
+              color: "red",
+              text: "Could not run tests: an error occurred",
+              bold: true,
+            },
+            {
+              color: "red",
+              text: event.data.message || "An unknown error occurred",
+            },
+          ],
+        }),
+      ],
     },
   },
 };
@@ -179,6 +201,33 @@ export const lessonMachine = createMachine<Context, Event>(
         onDone: {
           target: "idle.machineValid.testsPassed",
         },
+        invoke: {
+          src: "overrideConsoleLog",
+        },
+        on: {
+          LOG_TO_CONSOLE: {
+            actions: assign((context, event) => {
+              return {
+                terminalLines: [
+                  ...context.terminalLines,
+                  {
+                    color:
+                      event.consoleType === "log"
+                        ? "gray"
+                        : event.consoleType === "error"
+                        ? "red"
+                        : "yellow",
+                    text: `${event.args
+                      .map((elem) => JSON.stringify(elem, null, 2))
+                      .join(" ")
+                      .slice(1, -1)}`,
+                    fromUser: true,
+                  },
+                ],
+              };
+            }),
+          },
+        },
         states: {
           runningStep: {
             entry: ["reportStepStartedInTerminal"],
@@ -230,6 +279,39 @@ export const lessonMachine = createMachine<Context, Event>(
   },
   {
     services: {
+      overrideConsoleLog: () => (send) => {
+        const tempLog = console.log;
+        const tempWarn = console.warn;
+        const tempError = console.error;
+
+        console.log = (...args: any[]) => {
+          send({
+            type: "LOG_TO_CONSOLE",
+            args,
+            consoleType: "log",
+          });
+        };
+        console.warn = (...args: any[]) => {
+          send({
+            type: "LOG_TO_CONSOLE",
+            args,
+            consoleType: "warn",
+          });
+        };
+        console.error = (...args: any[]) => {
+          send({
+            type: "LOG_TO_CONSOLE",
+            args,
+            consoleType: "error",
+          });
+        };
+
+        return () => {
+          console.log = tempLog;
+          console.warn = tempWarn;
+          console.error = tempError;
+        };
+      },
       runTestStep: (context, event) => (send) => {
         const cases = getCurrentLessonCases(context);
         const currentStep =
@@ -237,7 +319,12 @@ export const lessonMachine = createMachine<Context, Event>(
 
         if (!currentStep || !context.service) return;
 
-        runTestStep(currentStep, context.service, () => send("STEP_DONE"));
+        runTestStep(
+          currentStep,
+          context.service,
+          () => send("STEP_DONE"),
+          context.terminalLines,
+        );
       },
     },
     guards: {
@@ -331,6 +418,14 @@ export const lessonMachine = createMachine<Context, Event>(
               icon: "check",
             },
           ];
+        } else if (currentStep.type === "CONSOLE_ASSERTION") {
+          text = [
+            {
+              text: `Expected "${currentStep.expectedText}" to have been logged to the console`,
+              color: "gray",
+              icon: "check",
+            },
+          ];
         }
 
         if (!text) return {};
@@ -372,6 +467,28 @@ export const lessonMachine = createMachine<Context, Event>(
           ];
         } else if (currentStep.type === "OPTIONS_ASSERTION") {
           const errorText = `Check failed: ${currentStep.description}`;
+          text = [
+            {
+              color: "red",
+              text: new Array(errorText.length + 2).fill("-").join(""),
+            },
+            {
+              color: "red",
+              bold: true,
+              text: `Test #${context.stepCursor.case + 1} failed`,
+            },
+            {
+              text: errorText,
+              color: "red",
+              icon: "cross",
+            },
+            {
+              color: "red",
+              text: new Array(errorText.length + 2).fill("-").join(""),
+            },
+          ];
+        } else if (currentStep.type === "CONSOLE_ASSERTION") {
+          const errorText = `Check failed: Expected "${currentStep.expectedText}" to have been logged to the console`;
           text = [
             {
               color: "red",
@@ -509,6 +626,7 @@ const runTestStep = <TContext, TEvent extends EventObject>(
   step: AcceptanceCriteriaStep<TContext, TEvent>,
   service: Interpreter<TContext, any, TEvent>,
   callback: () => void,
+  terminalLines: TerminalLine[],
 ) => {
   let state = service.state;
   const unsubscribeHandlers: (() => void)[] = [];
@@ -550,6 +668,19 @@ const runTestStep = <TContext, TEvent extends EventObject>(
       {
         const unwait = waitFor(step.durationInMs, callback);
         unsubscribeHandlers.push(unwait);
+      }
+      break;
+    case "CONSOLE_ASSERTION":
+      {
+        const regex = new RegExp(step.expectedText, "i");
+        const succeeded = terminalLines.some((line) => {
+          return line.fromUser && regex.test(line.text);
+        });
+
+        if (!succeeded) {
+          throw new Error("Assertion failed");
+        }
+        callback();
       }
       break;
   }
