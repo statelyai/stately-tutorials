@@ -1,3 +1,14 @@
+import { Button } from "@chakra-ui/button";
+import {
+  Box,
+  Code,
+  Divider,
+  Heading,
+  List,
+  ListItem,
+  Text,
+  UnorderedList,
+} from "@chakra-ui/layout";
 import { useMachine } from "@xstate/react";
 import classNames from "classnames";
 import type * as monaco from "monaco-editor";
@@ -10,7 +21,9 @@ import { lessonMachine } from "../../lessons/lessonRunner.machine";
 import { courseMeta } from "../../lessons/lessons/courses/meta";
 import { CourseType } from "../../lessons/LessonType";
 
-const Editor = dynamic(import("@monaco-editor/react"), { ssr: false });
+const EditorWithXStateImports = dynamic(
+  () => import("../../EditorWithXStateImports"),
+);
 
 export const getStaticPaths: GetStaticPaths = async (context) => {
   const fs = await import("fs");
@@ -95,102 +108,117 @@ const LessonInner = (props: {
   });
 
   return (
-    <div className="flex items-stretch w-full h-full min-h-screen">
-      <div className="flex-shrink-0 p-6 overflow-y-auto border-r w-96">
+    <Box display="flex" alignItems="stretch" w="full" h="full" minH="100vh">
+      <Box
+        flexShrink={0}
+        p="8"
+        overflowY="auto"
+        w="sm"
+        borderRight="2px"
+        borderColor="gray.800"
+        minH="0px"
+      >
         <ReactMarkdown
           components={{
             h1: (props) => (
-              <h1 {...props} className="mb-6 text-2xl font-bold"></h1>
+              <Box>
+                <Heading {...props} size="lg" mb="3"></Heading>
+                <Divider mb="4" borderColor="gray.500" />
+              </Box>
             ),
-            p: (props) => <p {...props} className="mb-4"></p>,
+            p: (props) => (
+              <Text {...props} mb="4" color="gray.100" lineHeight="7"></Text>
+            ),
+            code: (props) => <Code {...props} color="gray.100"></Code>,
+            ul: (props) => (
+              <UnorderedList {...props} mb="4" color="gray.100"></UnorderedList>
+            ),
+            li: (props) => <ListItem {...props} />,
           }}
         >{`${props.markdownFiles[state.context.lessonIndex]}`}</ReactMarkdown>
-      </div>
-      <div className="flex flex-col flex-1">
-        <Editor
+      </Box>
+      <Box display="flex" flexDir="column" flex={1}>
+        <EditorWithXStateImports
           height="400px"
-          language="typescript"
-          onChange={(text) => {
+          onChange={(text) => {}}
+          onCompile={(nodes) => {
             send({
-              type: "TEXT_EDITED",
-              text: text ?? "",
+              type: "MACHINES_COMPILED",
+              nodes,
             });
           }}
-          options={{
-            tabSize: 2,
-            minimap: {
-              enabled: false,
-            },
-          }}
-          onMount={async (editor, monaco) => {
-            editorRef.current = editor;
-            const [indexFile] = await Promise.all([
-              fetch(`/xstate.txt`).then((res) => res.text()),
-            ]);
-
-            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-              {
-                noSemanticValidation: true,
-              },
-            );
-
-            monaco.languages.typescript.typescriptDefaults.addExtraLib(
-              `${indexFile}`,
-            );
-          }}
+          language="typescript"
           value={state.context.fileText}
         />
-        <div className="flex-1 w-full p-4 px-6 bg-black">
+        <Box flex={1} w="full" padding="4" px="6" bg="black" overflowY="auto">
           {state.context.terminalLines.map((line, index) => {
             return (
-              <p
-                className={classNames(
-                  line.color === "red" && "text-red-400",
-                  line.color === "green" && "text-green-400",
-                  line.color === "white" && "text-white",
-                  line.color === "gray" && "text-gray-300",
-                  line.color === "blue" && "text-blue-400",
-                  line.color === "yellow" && "text-yellow-200",
-                  "font-mono text-sm",
-                  line.bold && "font-bold",
-                  "leading-loose",
-                )}
+              <Text
+                {...(line.bold && {
+                  fontWeight: "bold",
+                })}
+                {...(line.color === "red" && { color: "red.400" })}
+                {...(line.color === "green" && { color: "green.400" })}
+                {...(line.color === "white" && { color: "white" })}
+                {...(line.color === "gray" && { color: "gray.200" })}
+                {...(line.color === "blue" && { color: "blue.400" })}
+                {...(line.color === "yellow" && { color: "yellow.200" })}
+                // letterSpacing="wider"
+                fontFamily="mono"
+                fontSize="sm"
                 key={index}
               >
                 {line.icon === "check" && (
-                  <span className="mr-2 text-xl">✔️</span>
+                  <Text as="span" mr="2" fontSize="xl">
+                    ✔️
+                  </Text>
                 )}
                 {line.icon === "arrow-right" && (
-                  <span className="mr-2 text-xl">➡</span>
+                  <Text as="span" mr="2" fontSize="xl">
+                    ➡
+                  </Text>
                 )}
                 {line.icon === "clock" && (
-                  <span className="mr-2 text-xl">⏱️</span>
+                  <Text as="span" mr="2" fontSize="xl">
+                    ⏱️
+                  </Text>
                 )}
                 {line.icon === "cross" && (
-                  <span className="mr-2 text-xl">✖️</span>
+                  <Text as="span" mr="2" fontSize="xl">
+                    ✖️
+                  </Text>
                 )}
                 {`${line.text}`}
-              </p>
+              </Text>
             );
           })}
           {state.hasTag("testsPassed") && (
-            <button
+            <Button
               onClick={() => send("GO_TO_NEXT_LESSON")}
+              colorScheme="green"
+              fontFamily="mono"
+              fontSize="sm"
+              mt="3"
+              rounded="none"
               className="px-4 py-2 mt-3 font-mono text-sm font-semibold text-black uppercase bg-green-400"
             >
               Next Lesson
-            </button>
+            </Button>
           )}
-          {state.hasTag("testsNotPassed") && (
-            <button
+          {/* {state.hasTag("testsNotPassed") && (
+            <Button
               // onClick={() => send("GO_TO_NEXT_LESSON")}
+              colorScheme="red"
+              fontFamily="mono"
+              fontSize="sm"
+              mt="3"
               className="px-4 py-2 mt-3 font-mono text-sm font-semibold text-black uppercase bg-red-400"
             >
               Show Answer
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+            </Button>
+          )} */}
+        </Box>
+      </Box>
+    </Box>
   );
 };

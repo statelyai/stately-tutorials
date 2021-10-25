@@ -5,6 +5,7 @@ import {
   interpret,
   Interpreter,
   InterpreterStatus,
+  StateNode,
   StateNodeConfig,
 } from "xstate";
 import {
@@ -19,6 +20,7 @@ import type { CompileHandlerResponse } from "../pages/api/compile";
 interface Context {
   course: CourseType;
   service?: Interpreter<any, any, any>;
+  stateNodes: StateNode[];
   fileText: string;
   lessonIndex: number;
   stepCursor: {
@@ -44,6 +46,7 @@ interface TerminalLine {
 
 type Event =
   | { type: "TEXT_EDITED"; text: string }
+  | { type: "MACHINES_COMPILED"; nodes: StateNode[] }
   | {
       type: "STEP_DONE";
     }
@@ -59,22 +62,13 @@ type Event =
       consoleType: "log" | "warn" | "error";
     };
 
-const checkingIfMachineIsValid: StateNodeConfig<Context, any, Event> = {
+const startingService: StateNodeConfig<Context, any, Event> = {
   entry: ["stopRunningService"],
   invoke: {
     src: async (context, event) => {
-      if (!context.fileText) throw new Error();
-      const result: CompileHandlerResponse = await fetch(`/api/compile`, {
-        method: "POST",
-        body: JSON.stringify({ file: context.fileText }),
-      }).then((res) => res.json());
+      const machine = context.stateNodes[0];
 
-      if (!result.didItWork || !result.result) {
-        throw new Error();
-      }
-
-      const machine = toMachine(result.result);
-
+      if (!machine) throw new Error("Could not parse file");
       // Tests the machine to see if it fails compilation
       interpret(machine).start().stop();
 
@@ -117,11 +111,12 @@ const checkingIfMachineIsValid: StateNodeConfig<Context, any, Event> = {
 
 export const lessonMachine = createMachine<Context, Event>(
   {
-    initial: "throttling",
+    initial: "firstLoad",
     context: {
+      fileText: "",
       course: {} as any,
       lessonIndex: 0,
-      fileText: "",
+      stateNodes: [],
       stepCursor: {
         case: 0,
         step: 0,
@@ -134,16 +129,24 @@ export const lessonMachine = createMachine<Context, Event>(
         actions: "clearTerminalLines",
       },
       TEXT_EDITED: {
-        target: ".throttling",
         actions: assign((context, event) => {
           return {
             fileText: event.text,
+          };
+        }),
+      },
+      MACHINES_COMPILED: {
+        target: ".throttling",
+        actions: assign((context, event) => {
+          return {
+            stateNodes: event.nodes,
           };
         }),
         internal: false,
       },
     },
     states: {
+      firstLoad: {},
       idle: {
         id: "idle",
         initial: "machineValid",
@@ -176,9 +179,10 @@ export const lessonMachine = createMachine<Context, Event>(
       throttling: {
         entry: ["clearTerminalLines"],
         after: {
-          400: "checkingIfMachineIsValid",
+          100: "startingService",
         },
       },
+      startingService,
       movingToNextLesson: {
         entry: ["clearTerminalLines"],
         id: "movingToNextLesson",
@@ -197,10 +201,9 @@ export const lessonMachine = createMachine<Context, Event>(
             }),
             "autoFormatEditor",
           ],
-          target: "checkingIfMachineIsValid",
+          target: "startingService",
         },
       },
-      checkingIfMachineIsValid,
       runningTests: {
         entry: ["resetLessonCursor", "startService", "logTestStartToTerminal"],
         initial: "runningStep",

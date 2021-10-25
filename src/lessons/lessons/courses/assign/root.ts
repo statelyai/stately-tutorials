@@ -1,7 +1,13 @@
 import { CourseType } from "../../../LessonType";
 
 const assignCourse: CourseType = {
-  initialMachineText: `createMachine({
+  initialMachineText: `import { assign, createMachine } from 'xstate';
+
+interface Context {
+  count: number;
+}
+
+createMachine<Context>({
   context: {
     count: 0,
   },
