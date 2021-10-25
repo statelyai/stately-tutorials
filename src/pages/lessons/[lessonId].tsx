@@ -186,7 +186,7 @@ const LessonInner = (props: {
               // onClick={() => send("GO_TO_NEXT_LESSON")}
               className="px-4 py-2 mt-3 font-mono text-sm font-semibold text-black uppercase bg-red-400"
             >
-              Show Me The Answer
+              Show Answer
             </button>
           )}
         </div>

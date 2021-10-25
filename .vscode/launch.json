@@ -1,0 +1,11 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+{
+  "configurations": [
+    {
+      "command": "yarn dev",
+      "name": "Start dev server",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+  ]
+}
